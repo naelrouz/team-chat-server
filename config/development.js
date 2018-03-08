@@ -6,10 +6,6 @@ module.exports = {
   postgre: {
     database: 'slackclone',
     username: 'nael',
-    password: '',
-    options: {
-      host: 'localhost',
-      dialect: 'postgres'
-    }
+    password: ''
   }
 };
