@@ -1,6 +1,6 @@
 module.exports = {
   server: {
-    host: 'http://localhost',
+    host: '//localhost',
     port: 3000
   },
   postgre: {

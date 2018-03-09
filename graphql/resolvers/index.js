@@ -1,6 +1,6 @@
-import Query from "./Query";
-import Mutation from "./Mutation";
+import path from 'path';
+import { fileLoader, mergeResolvers } from 'merge-graphql-schemas';
 
-export default {
-  Query
-};
+const resolversArray = fileLoader(path.join(__dirname, './modules'));
+
+export default mergeResolvers(resolversArray);
