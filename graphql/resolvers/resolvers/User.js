@@ -1,6 +1,16 @@
 import bcrypt from 'bcrypt';
 import colors from 'colors';
 
+import _ from 'lodash';
+
+const formatErrors = (e, models) => {
+  if (e instanceof models.sequelize.ValidationError) {
+    //  _.pick({a: 1, b: 2}, 'a') => {a: 1}
+    return e.errors.map(x => _.pick(x, ['path', 'message']));
+  }
+  return [{ path: 'name', message: 'something went wrong' }];
+};
+
 export default {
   Query: {
     getUser: (parent, { id }, { models }) =>
@@ -8,34 +18,26 @@ export default {
     allUsers: (parent, args, { models }) => models.User.findAll()
   },
   Mutation: {
-    // register: (parent, args, { models }) => {
-    //   bcrypt.hash(myPlaintextPassword, saltRounds, function(err, hash) {
-    //     // Store hash in your password DB.
-    //     models.User.create(args);
-    //   });
-    // }
     register: async (parent, { password, ...otherArgs }, { models }) => {
-      const hashedPassword = await bcrypt.hash(password, 12);
-      const user = models.User.create({
-        ...otherArgs,
-        password: hashedPassword
-      });
-      user.catch(err => {
-        console.log(colors.red.bold('register.err: '), err);
-      });
-      return user;
+      try {
+        // if(password)
 
-      //   try {
-      //     const hashedPassword = await bcrypt.hash(password, 12);
-      //     const user = await models.User.create({
-      //       ...otherArgs,
-      //       password: hashedPassword
-      //     });
-      //     return true;
-      //   } catch (err) {
-      //     console.log(colors.red.bold('register.err: '), err);
-      //     return false;
-      //   }
+        const hashedPassword = await bcrypt.hash(password, 12);
+        const user = await models.User.create({
+          ...otherArgs,
+          password: hashedPassword
+        });
+        return {
+          status: true,
+          user
+        };
+      } catch (err) {
+        console.log(colors.red.bold('register.err: '), err);
+        return {
+          status: false,
+          errors: formatErrors(err, models) // TODO in this array must be all errors. Not only firs.
+        };
+      }
     }
   }
 };

@@ -9,7 +9,7 @@ export default (sequelize, DataTypes) => {
           msg: 'The username can only contain letters and numbers'
         },
         len: {
-          args: [3, 25],
+          args: [2, 25],
           msg: 'The username needs to be between 3 and 25 characters long'
         }
       }
@@ -24,13 +24,13 @@ export default (sequelize, DataTypes) => {
         }
       }
     },
-    password: {DataTypes.STRING,
-    validate:{
-      len: {
-        args: [6, 100],
-        msg: 'The password needs to be between 6 and 100 characters long'
-      }
-    }}
+    //
+    password: {
+      type: DataTypes.STRING
+      // validate: {
+      // Password validation in resolves. Because a password hash is sent here.
+      // }
+    }
   });
 
   User.associate = models => {
