@@ -1,0 +1,9 @@
+mutation {
+  createTeam(name: "team1") {
+    status
+    errors {
+      path
+      message
+    }
+  }
+}

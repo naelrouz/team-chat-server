@@ -1,0 +1,9 @@
+mutation {
+  register(username: "u1", email: "u1@mail.ru", password: "u1pass") {
+    status
+    errors {
+      path
+      message
+    }
+  }
+}

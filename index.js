@@ -1,17 +1,18 @@
-import Koa from "koa";
-import Router from "koa-router";
+import Koa from 'koa';
+import Router from 'koa-router';
 
-import cfg from "config";
-import colors from "colors";
+import cfg from 'config';
+import colors from 'colors';
 
-import { graphiqlKoa, graphqlKoa } from "apollo-server-koa";
-import { makeExecutableSchema } from "graphql-tools";
+import { graphiqlKoa, graphqlKoa } from 'apollo-server-koa';
+import { makeExecutableSchema } from 'graphql-tools';
 
-import middlewares from "./middlewares";
-import models from "./models";
+import middlewares from './middlewares';
+import addUserInContext from './middlewares/add-user-in-ctx';
+import models from './models';
 
-import resolvers from "./graphql/resolvers";
-import typeDefs from "./graphql/type-defs";
+import resolvers from './graphql/resolvers';
+import typeDefs from './graphql/type-defs';
 
 const schema = makeExecutableSchema({
   typeDefs,
@@ -23,14 +24,28 @@ const router = new Router();
 
 const PORT = 3000;
 
+const { SECRET, SECRET2 } = cfg;
+
+console.log('SECRET: ', SECRET);
+
 Object.keys(middlewares).forEach(middleware => {
   middlewares[middleware].init(app);
 });
 
-const endpointURL = "/graphql";
-const graphiqlURL = "/graphiql";
+addUserInContext.init(app);
 
-const graphqlKoaOptions = { schema, context: { models, user: { id: 1 } } };
+const endpointURL = '/graphql';
+const graphiqlURL = '/graphiql';
+
+const graphqlKoaOptions = ctx => ({
+  schema,
+  context: {
+    models,
+    ctx,
+    SECRET,
+    SECRET2
+  }
+});
 
 router.post(endpointURL, graphqlKoa(graphqlKoaOptions));
 router.get(endpointURL, graphqlKoa(graphqlKoaOptions));
@@ -57,7 +72,7 @@ const appListenCB = () => {
 models.sequelize
   .sync({ force: false }) // Create the tables
   .then(() => {
-    console.log(colors.green("sequelize.sync: OK"));
+    console.log(colors.green('sequelize.sync: OK'));
     app.listen(PORT, appListenCB);
   })
   .catch(err => {

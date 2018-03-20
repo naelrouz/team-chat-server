@@ -1,4 +1,5 @@
 export default `
+
 type User {
     id: Int!
     username: String!
@@ -17,7 +18,16 @@ type RegisterResponse {
     errors: [Error!]
 }
 
+type LoginResponse {
+    status: Boolean!
+    token: String
+    refreshToken: String
+    errors: [Error!]
+}
+  
 type Mutation {
     register(username: String!, email: String!, password: String!): RegisterResponse!
+    login(email: String!, password: String!): LoginResponse!
 }
+
 `;

@@ -1,0 +1,11 @@
+mutation {
+  login(email: "u1@mail.ru", password: "u1pass") {
+    status
+    token
+    refreshToken
+    errors {
+      path
+      message
+    }
+  }
+}
