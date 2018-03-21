@@ -1,7 +1,7 @@
 export default (sequelize, DataTypes) => {
   const Channel = sequelize.define('Channel', {
     name: DataTypes.STRING,
-    public: DataTypes.BOOLEAN
+    public: { type: DataTypes.BOOLEAN, defaultValue: false }
   });
 
   Channel.associate = models => {

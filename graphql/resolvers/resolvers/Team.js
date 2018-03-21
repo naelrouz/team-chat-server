@@ -17,9 +17,18 @@ export default {
 
           // ctx.set('lastTeamCreate', args.name);
 
-          await models.Team.create({ ...args, owner: id });
+          const team = await models.Team.create({ ...args, owner: id });
+
+          console.log('team.id: ', team.id);
+
+          models.Channel.create({
+            name: `General of ${team.name}`,
+            teamId: team.id
+          });
+
           return {
-            status: true
+            status: true,
+            team
           };
         } catch (err) {
           return {
@@ -32,6 +41,6 @@ export default {
   },
   Team: {
     channels: ({ id }, args, { models }) =>
-      models.Channel.findAll({ teamId: id }, { raw: true })
+      models.Channel.findAll({ where: { teamId: id } }, { raw: true })
   }
 };

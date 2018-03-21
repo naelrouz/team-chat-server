@@ -8,6 +8,7 @@ export default `
   }
   type CreateTeamResponse {
     status: Boolean!
+    team: Team
     errors: [Error!]
   }
   type Query {
