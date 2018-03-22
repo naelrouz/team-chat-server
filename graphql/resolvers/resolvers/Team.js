@@ -21,7 +21,7 @@ export default {
 
           console.log('team.id: ', team.id);
 
-          models.Channel.create({
+          await models.Channel.create({
             name: `General of ${team.name}`,
             teamId: team.id
           });
