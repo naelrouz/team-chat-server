@@ -8,7 +8,7 @@ export default `
   }
 
   type CreateChannelResponse {
-    ok: Boolean!
+    status: Boolean!
     team: Team
     errors: [Error!]
   }

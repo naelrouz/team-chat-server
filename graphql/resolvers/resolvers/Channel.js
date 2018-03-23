@@ -13,12 +13,12 @@ export default {
         );
 
         return {
-          ok: true,
+          status: true,
           team
         };
       } catch (err) {
         return {
-          ok: false,
+          status: false,
           errors: formatErrors(err, models)
         };
       }
