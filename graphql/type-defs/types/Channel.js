@@ -5,11 +5,12 @@ export default `
     public: Boolean!
     messages: [Message!]!
     users: [User!]!
+    teamId: Int!
   }
 
   type CreateChannelResponse {
     status: Boolean!
-    team: Team
+    channel: Channel
     errors: [Error!]
   }
 

@@ -5,16 +5,11 @@ export default {
   Mutation: {
     createChannel: async (parent, args, { models }) => {
       try {
-        await models.Channel.create(args);
-
-        const team = await models.Team.find(
-          { where: { id: args.teamId } },
-          { raw: true }
-        );
+        const channel = await models.Channel.create(args);
 
         return {
           status: true,
-          team
+          channel
         };
       } catch (err) {
         return {
