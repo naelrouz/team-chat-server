@@ -14,7 +14,12 @@ export default `
   type Query {
     allTeams: [Team!]!
   }
+  type AddTeamMemberResponse {
+    status: Boolean!
+    errors: [Error!]
+  }
   type Mutation {
     createTeam(name: String!): CreateTeamResponse!
+    addTeamMember(email: String!, teamId: Int!): AddTeamMemberResponse!
   }
 `;

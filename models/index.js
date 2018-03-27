@@ -43,7 +43,8 @@ const db = {
   User: sequelize.import('./User'),
   Team: sequelize.import('./Team'),
   Channel: sequelize.import('./Channel'),
-  Message: sequelize.import('./Message')
+  Message: sequelize.import('./Message'),
+  Member: sequelize.import('./Member')
 };
 
 console.log('models.db: ', db);

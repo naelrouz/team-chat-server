@@ -1,5 +1,6 @@
 import formatErrors from '../../../libs/formatErrors';
 import requiresAuth from '../../../libs/permissions';
+import Message from '../../../models/Message';
 
 export default {
   Query: {
@@ -9,6 +10,69 @@ export default {
     )
   },
   Mutation: {
+    addTeamMember: requiresAuth.createResolver(
+      async (parent, { email, teamId }, { models, ctx: { user: { id } } }) => {
+        try {
+          const team = await models.Team.findOne(
+            { where: { id: teamId } },
+            { raw: true }
+          );
+
+          console.log('addTeamMember.user.id: ', id);
+          console.log('team.owner: ', team.owner);
+
+          console.log('team.owner !== id: ', team.owner !== id);
+
+          if (team.owner !== id) {
+            return {
+              status: false,
+              errors: [{ path: 'email', message: 'Нет прав' }]
+            };
+          }
+
+          const userToAdd = await models.User.findOne(
+            { where: { email } },
+            { raw: true }
+          );
+
+          console.log('userToAdd:', !userToAdd);
+
+          if (!userToAdd) {
+            return {
+              status: false,
+              errors: [
+                {
+                  path: 'email',
+                  message: 'Could not find user with this email'
+                }
+              ]
+            };
+          }
+
+          console.log('teamId: ', teamId);
+          console.log('userId: ', userToAdd.id);
+
+          const member = await models.Member.create({
+            userId: userToAdd.id,
+            teamId
+          });
+
+          console.log('member: ', member);
+
+          return {
+            status: true
+          };
+        } catch (err) {
+          console.log('addTeamMember.err:', err);
+
+          return {
+            status: false,
+            errors: formatErrors(err, models)
+          };
+        }
+      }
+    ),
+
     createTeam: requiresAuth.createResolver(
       async (parent, args, { models, ctx }) => {
         try {
