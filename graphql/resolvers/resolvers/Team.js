@@ -1,6 +1,7 @@
 import formatErrors from '../../../libs/formatErrors';
 import requiresAuth from '../../../libs/permissions';
-import Message from '../../../models/Message';
+
+// import Message from '../../../models/Message';
 
 export default {
   Query: {
@@ -72,7 +73,6 @@ export default {
         }
       }
     ),
-
     createTeam: requiresAuth.createResolver(
       async (parent, args, { models, ctx }) => {
         try {
@@ -81,18 +81,28 @@ export default {
 
           // ctx.set('lastTeamCreate', args.name);
 
-          const team = await models.Team.create({ ...args, owner: id });
+          // const team = await models.Team.create({ ...args, owner: id });
 
-          console.log('team.id: ', team.id);
+          // console.log('team.id: ', team.id);
 
-          await models.Channel.create({
-            name: `General of ${team.name}`,
-            teamId: team.id
+          // await models.Channel.create({
+          //   name: `General of ${team.name}`,
+          //   teamId: team.id
+          // });
+
+          const createdTeam = await models.sequelize.transaction(async () => {
+            const team = await models.Team.create({ ...args, owner: id });
+            await models.Channel.create({
+              name: 'general',
+              public: true,
+              teamId: team.id
+            });
+            return team;
           });
 
           return {
             status: true,
-            team
+            team: createdTeam
           };
         } catch (err) {
           return {
