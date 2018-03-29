@@ -6,6 +6,7 @@
 [libs]
 
 [lints]
+all=warn
 
 [options]
 

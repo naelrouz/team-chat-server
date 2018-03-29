@@ -2,7 +2,7 @@
 import formatErrors from '../../../libs/formatErrors';
 import requiresAuth from '../../../libs/permissions';
 
-// import Message from '../../../models/Message';
+// const a: number = 'wveww';
 
 export default {
   Query: {
