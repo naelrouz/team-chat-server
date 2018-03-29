@@ -12,6 +12,13 @@ export default {
           { where: { owner: id } },
           { raw: true }
         );
+        // const teamsWhereMember = await models.sequelize.query(
+        //   'select * from Teams join members on id = team_id where user_id = ?',
+        //   {
+        //     replacements: [id],
+        //     model: models.Team
+        //   }
+        // );
         const teamsWhereMember = await models.Team.findAll(
           {
             include: [
@@ -39,15 +46,19 @@ export default {
             { raw: true }
           );
 
-          console.log('addTeamMember.user.id: ', id);
-          console.log('team.owner: ', team.owner);
-
-          console.log('team.owner !== id: ', team.owner !== id);
+          // console.log('addTeamMember.user.id: ', id);
+          // console.log('team.owner: ', team.owner);
+          // console.log('team.owner !== id: ', team.owner !== id);
 
           if (team.owner !== id) {
             return {
               status: false,
-              errors: [{ path: 'email', message: 'Нет прав' }]
+              errors: [
+                {
+                  path: 'email',
+                  message: 'Permission denied. You must be owner this Team.'
+                }
+              ]
             };
           }
 
