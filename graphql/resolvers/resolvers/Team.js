@@ -1,3 +1,4 @@
+/* @flow */
 import formatErrors from '../../../libs/formatErrors';
 import requiresAuth from '../../../libs/permissions';
 
@@ -6,8 +7,27 @@ import requiresAuth from '../../../libs/permissions';
 export default {
   Query: {
     allTeams: requiresAuth.createResolver(
-      async (parent, args, { models, ctx: { user: { id } } }) =>
-        models.Team.findAll({ owner: id }, { raw: true })
+      async (parent, args, { models, ctx: { user: { id } } }) => {
+        const teamsWhereOwner = await models.Team.findAll(
+          { where: { owner: id } },
+          { raw: true }
+        );
+        const teamsWhereMember = await models.Team.findAll(
+          {
+            include: [
+              {
+                model: models.User,
+                where: { id }
+              }
+            ]
+          },
+          { raw: true }
+        );
+
+        const allTeams = [...teamsWhereOwner, ...teamsWhereMember];
+
+        return allTeams;
+      }
     )
   },
   Mutation: {
@@ -90,10 +110,10 @@ export default {
           //   teamId: team.id
           // });
 
-          const createdTeam = await models.sequelize.transaction(async () => {
+          const response = await models.sequelize.transaction(async () => {
             const team = await models.Team.create({ ...args, owner: id });
             await models.Channel.create({
-              name: 'general',
+              name: `General of ${team.name}`,
               public: true,
               teamId: team.id
             });
@@ -102,7 +122,7 @@ export default {
 
           return {
             status: true,
-            team: createdTeam
+            team: response
           };
         } catch (err) {
           return {
