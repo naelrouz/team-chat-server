@@ -1,7 +1,14 @@
 export default (sequelize, DataTypes) => {
-  const Message = sequelize.define('Message', {
-    text: DataTypes.STRING
-  });
+  const Message = sequelize.define(
+    'Message',
+    {
+      text: DataTypes.STRING,
+      createdAt: { type: DataTypes.DATE, field: 'created_at' }
+    },
+    {
+      timestamps: true
+    }
+  );
 
   Message.associate = models => {
     // 1:M

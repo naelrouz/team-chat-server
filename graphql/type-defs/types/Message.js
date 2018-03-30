@@ -4,8 +4,17 @@ export default `
     text: String!
     user: User!
     channel: Channel!
+    createdAt: String!
+  }
+  type Query {
+    channelMessages(channelId: Int!): [Message!]!
+  }
+  type CreateMessageResponse {
+    status: Boolean!
+    message: Message
+    errors: [Error!]
   }
   type Mutation {
-    createMessage(channelId: Int!, text: String!): Boolean!
+    createMessage(channelId: Int!, text: String!): CreateMessageResponse!
   }
 `;
