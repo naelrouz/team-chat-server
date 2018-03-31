@@ -42,6 +42,7 @@
     "colors": "^1.1.2",
     "config": "^1.30.0",
     "graphql": "^0.13.1",
+    "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^2.21.0",
     "jsonwebtoken": "^8.2.0",
     "koa": "^2.5.0",
@@ -56,6 +57,7 @@
     "passport-local": "^1.0.0",
     "pg": "^7.4.1",
     "pg-hstore": "^2.3.2",
-    "sequelize": "^4.35.2"
+    "sequelize": "^4.35.2",
+    "subscriptions-transport-ws": "^0.9.7"
   }
 }

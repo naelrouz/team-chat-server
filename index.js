@@ -3,9 +3,13 @@ import Router from 'koa-router';
 
 import cfg from 'config';
 import colors from 'colors';
+import { createServer } from 'http';
 
 import { graphiqlKoa, graphqlKoa } from 'apollo-server-koa';
 import { makeExecutableSchema } from 'graphql-tools';
+import { execute, subscribe } from 'graphql';
+import { PubSub } from 'graphql-subscriptions';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
 
 import middlewares from './middlewares';
 import addUserInContext from './middlewares/add-user-in-ctx';
@@ -55,10 +59,10 @@ router.get(graphiqlURL, graphiqlKoa({ endpointURL })); // interactive in-browser
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-const appListenCB = () => {
+const afterAppStart = () => {
   console.log(
     colors.green.bold(
-      `Fitlead API start on ${cfg.server.host}:${PORT}${endpointURL}`
+      `Team Chat API start on ${cfg.server.host}:${PORT}${endpointURL}`
     )
   );
 
@@ -69,12 +73,80 @@ const appListenCB = () => {
   );
 };
 
-models.sequelize
-  .sync({ force: false }) // Create the tables
-  .then(() => {
-    console.log(colors.green('sequelize.sync: OK'));
-    app.listen(PORT, appListenCB);
-  })
-  .catch(err => {
-    console.log(err);
-  });
+const pubsub = new PubSub();
+// const server = createServer(app);
+
+// const serverStart = () => {
+//   server.listen(PORT, () => {
+//     new SubscriptionServer(
+//       {
+//         execute,
+//         subscribe,
+//         schema
+//       },
+//       {
+//         server,
+//         path: '/subscriptions'
+//       }
+//     );
+//   });
+// };
+
+// const start = async () => {
+//   try {
+//     await models.sequelize.sync({ force: false }); // Create the tables
+//     console.log(colors.green('sequelize.sync: OK'));
+
+//     await serverStart();
+//     afterAppStart();
+//   } catch (err) {
+//     console.error(colors.red.bold(`App start err: ${err}`));
+//   }
+// };
+
+// start();
+
+// models.sequelize
+//   .sync({ force: false }) // Create the tables
+//   .then(() => {
+//     console.log(colors.green('sequelize.sync: OK'));
+//     app.listen(PORT, afterAppStart);
+//   })
+//   .catch(err => {
+//     console.log(err);
+//   });
+
+const appStart = async () => {
+  await models.sequelize.sync({ force: false }); // Create the tables
+  console.log(colors.green('sequelize.sync: OK'));
+
+  const server = await app.listen(PORT);
+  const subscriptionServer = await new SubscriptionServer(
+    {
+      execute,
+      subscribe,
+      schema
+    },
+    {
+      server,
+      path: '/subscriptions'
+    }
+  );
+  afterAppStart();
+};
+
+appStart();
+
+// server.listen(3001, () => {
+//   new SubscriptionServer(
+//     {
+//       execute,
+//       subscribe,
+//       schema
+//     },
+//     {
+//       server: server,
+//       path: '/subscriptions'
+//     }
+//   );
+// });
