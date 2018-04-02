@@ -9,6 +9,9 @@ export default `
   type Query {
     channelMessages(channelId: Int!): [Message!]!
   }
+  type Subscription {
+    newChannelMessage(channelId: Int!): Message!
+  }
   type CreateMessageResponse {
     status: Boolean!
     message: Message

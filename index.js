@@ -3,12 +3,11 @@ import Router from 'koa-router';
 
 import cfg from 'config';
 import colors from 'colors';
-import { createServer } from 'http';
+// import { createServer } from 'http';
 
 import { graphiqlKoa, graphqlKoa } from 'apollo-server-koa';
 import { makeExecutableSchema } from 'graphql-tools';
 import { execute, subscribe } from 'graphql';
-import { PubSub } from 'graphql-subscriptions';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 
 import middlewares from './middlewares';
@@ -73,7 +72,6 @@ const afterAppStart = () => {
   );
 };
 
-const pubsub = new PubSub();
 // const server = createServer(app);
 
 // const serverStart = () => {
@@ -117,22 +115,26 @@ const pubsub = new PubSub();
 //   });
 
 const appStart = async () => {
-  await models.sequelize.sync({ force: false }); // Create the tables
-  console.log(colors.green('sequelize.sync: OK'));
+  try {
+    await models.sequelize.sync({ force: false }); // Create the tables
+    console.log(colors.green('sequelize.sync: OK'));
 
-  const server = await app.listen(PORT);
-  const subscriptionServer = await new SubscriptionServer(
-    {
-      execute,
-      subscribe,
-      schema
-    },
-    {
-      server,
-      path: '/subscriptions'
-    }
-  );
-  afterAppStart();
+    const server = await app.listen(PORT);
+    const subscriptionServer = await new SubscriptionServer(
+      {
+        execute,
+        subscribe,
+        schema
+      },
+      {
+        server,
+        path: '/subscriptions'
+      }
+    );
+    afterAppStart();
+  } catch (err) {
+    console.error('appStart.err:', err);
+  }
 };
 
 appStart();
