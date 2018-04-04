@@ -6,7 +6,7 @@ import requiresAuth from '../../../libs/permissions';
 
 export default {
   Query: {
-    allTeams: requiresAuth.createResolver(
+    userTeams: requiresAuth.createResolver(
       async (parent, args, { models, ctx: { user: { id } } }) => {
         const teamsWhereOwner = await models.Team.findAll(
           { where: { owner: id } },
@@ -30,9 +30,7 @@ export default {
           },
           { raw: true }
         );
-
         const allTeams = [...teamsWhereOwner, ...teamsWhereMember];
-
         return allTeams;
       }
     )
@@ -107,25 +105,28 @@ export default {
     createTeam: requiresAuth.createResolver(
       async (parent, args, { models, ctx }) => {
         try {
-          const { user: { id } } = ctx;
-          console.log('createTeam.user.id: ', id);
+          const { user } = ctx;
+          console.log('createTeam.user.id: ', user.id);
 
-          // ctx.set('lastTeamCreate', args.name);
-
+          // No transaction
           // const team = await models.Team.create({ ...args, owner: id });
-
           // console.log('team.id: ', team.id);
-
           // await models.Channel.create({
           //   name: `General of ${team.name}`,
           //   teamId: team.id
           // });
 
+          // Transaction
           const response = await models.sequelize.transaction(async () => {
-            const team = await models.Team.create({ ...args, owner: id });
+            const team = await models.Team.create({ ...args }); // owner: id
             await models.Channel.create({
               name: `General of ${team.name}`,
               public: true,
+              teamId: team.id
+            });
+            await models.Member.create({
+              admin: true,
+              userId: user.id,
               teamId: team.id
             });
             return team;

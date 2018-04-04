@@ -2,7 +2,6 @@ export default `
   type Team {
     id: Int!
     name: String!
-    owner: Int!
     members: [User!]!
     channels: [Channel!]!
   }
@@ -12,7 +11,7 @@ export default `
     errors: [Error!]
   }
   type Query {
-    allTeams: [Team!]!
+    userTeams: [Team!]!
   }
   type AddTeamMemberResponse {
     status: Boolean!

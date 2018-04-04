@@ -2,11 +2,46 @@ import colors from 'colors';
 
 import { tryLogin } from '../../../libs/auth';
 import formatErrors from '../../../libs/formatErrors';
+import requiresAuth from '../../../libs/permissions';
 
 export default {
+  User: {
+    teams: requiresAuth.createResolver(
+      async (parent, args, { models, ctx: { user: { id } } }) => {
+        // const teamsWhereOwner = await models.Team.findAll(
+        //   { where: { owner: id } },
+        //   { raw: true }
+        // );
+        // const teamsWhereMember = await models.sequelize.query(
+        //   'select * from Teams join members on id = team_id where user_id = ?',
+        //   {
+        //     replacements: [id],
+        //     model: models.Team
+        //   }
+        // );
+        const teamsWhereMember = await models.Team.findAll(
+          {
+            include: [
+              {
+                model: models.User,
+                where: { id }
+              }
+            ]
+          },
+          { raw: true }
+        );
+        // ...teamsWhereOwner,
+        const allTeams = [...teamsWhereMember];
+        return allTeams;
+      }
+    )
+  },
   Query: {
-    getUser: (parent, { id }, { models }) =>
-      models.User.findOne({ where: { id } }),
+    me: (parent, args, { models, ctx: { user } }) => {
+      console.log('Query.me.user.id: ', user.id);
+
+      return models.User.findOne({ where: { id: user.id } });
+    },
     allUsers: (parent, args, { models }) => models.User.findAll()
   },
   Mutation: {
