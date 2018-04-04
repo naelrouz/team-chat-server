@@ -1,6 +1,7 @@
 import Koa from 'koa';
 import Router from 'koa-router';
 
+import jwt from 'jsonwebtoken';
 import cfg from 'config';
 import colors from 'colors';
 // import { createServer } from 'http';
@@ -9,6 +10,8 @@ import { graphiqlKoa, graphqlKoa } from 'apollo-server-koa';
 import { makeExecutableSchema } from 'graphql-tools';
 import { execute, subscribe } from 'graphql';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
+
+import { refreshTokens } from './libs/auth';
 
 import middlewares from './middlewares';
 import addUserInContext from './middlewares/add-user-in-ctx';
@@ -39,6 +42,7 @@ addUserInContext.init(app);
 
 const endpointURL = '/graphql';
 const graphiqlURL = '/graphiql';
+const subscriptionsEndpoint = `ws://localhost:${PORT}/subscriptions`;
 
 const graphqlKoaOptions = ctx => ({
   schema,
@@ -53,7 +57,7 @@ const graphqlKoaOptions = ctx => ({
 router.post(endpointURL, graphqlKoa(graphqlKoaOptions));
 router.get(endpointURL, graphqlKoa(graphqlKoaOptions));
 
-router.get(graphiqlURL, graphiqlKoa({ endpointURL })); // interactive in-browser GraphQL IDE
+router.get(graphiqlURL, graphiqlKoa({ endpointURL, subscriptionsEndpoint })); // interactive in-browser GraphQL IDE
 
 app.use(router.routes());
 app.use(router.allowedMethods());
@@ -71,38 +75,6 @@ const afterAppStart = () => {
     )
   );
 };
-
-// const server = createServer(app);
-
-// const serverStart = () => {
-//   server.listen(PORT, () => {
-//     new SubscriptionServer(
-//       {
-//         execute,
-//         subscribe,
-//         schema
-//       },
-//       {
-//         server,
-//         path: '/subscriptions'
-//       }
-//     );
-//   });
-// };
-
-// const start = async () => {
-//   try {
-//     await models.sequelize.sync({ force: false }); // Create the tables
-//     console.log(colors.green('sequelize.sync: OK'));
-
-//     await serverStart();
-//     afterAppStart();
-//   } catch (err) {
-//     console.error(colors.red.bold(`App start err: ${err}`));
-//   }
-// };
-
-// start();
 
 // models.sequelize
 //   .sync({ force: false }) // Create the tables
@@ -124,7 +96,38 @@ const appStart = async () => {
       {
         execute,
         subscribe,
-        schema
+        schema,
+        onConnect: async (connectionParams, webSocket) => {
+          console.log('connectionParams: ', connectionParams);
+          const { token, refreshToken } = connectionParams;
+
+          if (token && refreshToken) {
+            let user = null;
+            try {
+              const payload = jwt.verify(token, SECRET);
+              user = payload.user;
+            } catch (err) {
+              const newTokens = await refreshTokens(
+                token,
+                refreshToken,
+                models,
+                SECRET,
+                SECRET2
+              );
+              if (newTokens.token && newTokens.refreshToken) {
+                user = newTokens.user;
+              }
+
+              if (!user) {
+                throw new Error('Invalid auth tokens!');
+              }
+            }
+
+            return true;
+          }
+
+          throw new Error('Missing auth tokens!');
+        }
       },
       {
         server,
@@ -138,17 +141,3 @@ const appStart = async () => {
 };
 
 appStart();
-
-// server.listen(3001, () => {
-//   new SubscriptionServer(
-//     {
-//       execute,
-//       subscribe,
-//       schema
-//     },
-//     {
-//       server: server,
-//       path: '/subscriptions'
-//     }
-//   );
-// });
