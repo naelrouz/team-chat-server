@@ -3,6 +3,7 @@ export default `
     id: Int!
     text: String!
     user: User!
+    channelId: Int!
     channel: Channel!
     createdAt: String!
   }
