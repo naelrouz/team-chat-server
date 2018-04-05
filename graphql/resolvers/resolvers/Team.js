@@ -5,50 +5,20 @@ import requiresAuth from '../../../libs/permissions';
 // const a: number = 'wveww';
 
 export default {
-  Query: {
-    userTeams: requiresAuth.createResolver(
-      async (parent, args, { models, ctx: { user: { id } } }) => {
-        const teamsWhereOwner = await models.Team.findAll(
-          { where: { owner: id } },
-          { raw: true }
-        );
-        // const teamsWhereMember = await models.sequelize.query(
-        //   'select * from Teams join members on id = team_id where user_id = ?',
-        //   {
-        //     replacements: [id],
-        //     model: models.Team
-        //   }
-        // );
-        const teamsWhereMember = await models.Team.findAll(
-          {
-            include: [
-              {
-                model: models.User,
-                where: { id }
-              }
-            ]
-          },
-          { raw: true }
-        );
-        const allTeams = [...teamsWhereOwner, ...teamsWhereMember];
-        return allTeams;
-      }
-    )
-  },
   Mutation: {
     addTeamMember: requiresAuth.createResolver(
-      async (parent, { email, teamId }, { models, ctx: { user: { id } } }) => {
+      async (parent, { email, teamId }, { models, ctx: { user } }) => {
         try {
-          const team = await models.Team.findOne(
-            { where: { id: teamId } },
+          const { admin } = await models.Member.findOne(
+            { where: { teamId, userId: user.id } },
             { raw: true }
           );
 
           // console.log('addTeamMember.user.id: ', id);
-          // console.log('team.owner: ', team.owner);
+          console.log('admin: ', admin);
           // console.log('team.owner !== id: ', team.owner !== id);
 
-          if (team.owner !== id) {
+          if (!admin) {
             return {
               status: false,
               errors: [
@@ -84,7 +54,8 @@ export default {
 
           const member = await models.Member.create({
             userId: userToAdd.id,
-            teamId
+            teamId,
+            admin: false
           });
 
           console.log('member: ', member);
@@ -124,12 +95,15 @@ export default {
               public: true,
               teamId: team.id
             });
-            await models.Member.create({
+            const { admin } = await models.Member.create({
               admin: true,
               userId: user.id,
               teamId: team.id
             });
-            return team;
+
+            // console.log('createTeam.transaction.team: ', team);
+
+            return { ...team.dataValues, admin };
           });
 
           return {

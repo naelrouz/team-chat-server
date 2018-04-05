@@ -92,20 +92,19 @@ const appStart = async () => {
     console.log(colors.green('sequelize.sync: OK'));
 
     const server = await app.listen(PORT);
-    const subscriptionServer = await new SubscriptionServer(
+    await new SubscriptionServer(
       {
         execute,
         subscribe,
         schema,
         onConnect: async (connectionParams, webSocket) => {
-          console.log('connectionParams: ', connectionParams);
+          // console.log('connectionParams: ', connectionParams);
           const { token, refreshToken } = connectionParams;
 
           if (token && refreshToken) {
-            let user = null;
             try {
-              const payload = jwt.verify(token, SECRET);
-              user = payload.user;
+              const { user } = jwt.verify(token, SECRET);
+              return { user };
             } catch (err) {
               const newTokens = await refreshTokens(
                 token,
@@ -115,18 +114,32 @@ const appStart = async () => {
                 SECRET2
               );
               if (newTokens.token && newTokens.refreshToken) {
-                user = newTokens.user;
+                return { user: newTokens.user };
               }
 
-              if (!user) {
-                throw new Error('Invalid auth tokens!');
-              }
+              //   if (!user) {
+              //     throw new Error('Invalid auth tokens!');
+              //   }
             }
 
-            return true;
+            return {
+              errors: [
+                {
+                  message: 'Invalid auth tokens!',
+                  path: 'SubscriptionServer.onConnect'
+                }
+              ]
+            };
           }
 
-          throw new Error('Missing auth tokens!');
+          return {
+            errors: [
+              {
+                message: 'Missing auth tokens!',
+                path: 'SubscriptionServer.onConnect'
+              }
+            ]
+          };
         }
       },
       {

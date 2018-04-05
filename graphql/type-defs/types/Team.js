@@ -4,14 +4,12 @@ export default `
     name: String!
     members: [User!]!
     channels: [Channel!]!
+    admin: Boolean!
   }
   type CreateTeamResponse {
     status: Boolean!
     team: Team
     errors: [Error!]
-  }
-  type Query {
-    userTeams: [Team!]!
   }
   type AddTeamMemberResponse {
     status: Boolean!
