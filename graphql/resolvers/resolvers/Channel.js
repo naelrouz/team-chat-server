@@ -7,11 +7,11 @@ export default {
       async (parent, args, { models, ctx: { user } }) => {
         try {
           const { teamId } = args;
-          const team = await models.Team.findOne(
-            { where: { id: teamId } },
+          const team = await models.Member.findOne(
+            { where: { teamId, userId: user.id } },
             { raw: true }
           );
-          if (team.owner !== user.id) {
+          if (!team.admin) {
             return {
               status: false,
               errors: [

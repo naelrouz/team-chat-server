@@ -5,6 +5,37 @@ import requiresAuth from '../../../libs/permissions';
 // const a: number = 'wveww';
 
 export default {
+  Query: {
+    teamMembers: requiresAuth.createResolver(
+      async (parent, { teamId }, { models }) => {
+        // return models.Member.findAll({ where: {} });
+
+        // const teamMembers = await models.User.findAll(
+        //   {
+        //     include: [
+        //       {
+        //         model: models.Teams,
+        //         where: { id: teamId },
+        //         raw: true
+        //       }
+        //     ]
+        //   },
+        //   { raw: true }
+        // );
+
+        const teamMembers = await models.sequelize.query(
+          'SELECT * FROM "Users" JOIN "members" ON "members"."user_id" = "Users"."id" WHERE "members"."team_id" = ?',
+          {
+            replacements: [teamId],
+            model: models.User,
+            raw: true
+          }
+        );
+
+        return teamMembers;
+      }
+    )
+  },
   Mutation: {
     addTeamMember: requiresAuth.createResolver(
       async (parent, { email, teamId }, { models, ctx: { user } }) => {
@@ -121,6 +152,15 @@ export default {
   },
   Team: {
     channels: ({ id }, args, { models }) =>
-      models.Channel.findAll({ where: { teamId: id } }, { raw: true })
+      models.Channel.findAll({ where: { teamId: id } }, { raw: true }),
+    directMessagesMembers: ({ id }, args, { models, ctx: { user } }) =>
+      models.sequelize.query(
+        'select distinct on (u.id) u.id, u.username from "Users" as u join direct_messages as dm on (u.id = dm.sender_id) or (u.id = dm.receiver_id) where (:currentUserId = dm.sender_id or :currentUserId = dm.receiver_id) and dm.team_id = :teamId',
+        {
+          replacements: { currentUserId: user.id, teamId: id },
+          model: models.User,
+          raw: true
+        }
+      )
   }
 };

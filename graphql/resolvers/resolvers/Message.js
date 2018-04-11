@@ -2,7 +2,7 @@
 import { PubSub, withFilter } from 'graphql-subscriptions';
 
 import formatErrors from '../../../libs/formatErrors';
-import requiresAuth from '../../../libs/permissions';
+import requiresAuth, { requiresTeamAccess } from '../../../libs/permissions';
 
 const pubsub = new PubSub();
 
@@ -79,7 +79,7 @@ export default {
         } catch (err) {
           console.error('createMessage.err: ', err);
           return {
-            status: true,
+            status: false,
             errors: formatErrors(err, models)
           };
         }

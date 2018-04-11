@@ -3,8 +3,12 @@ export default `
     id: Int!
     name: String!
     members: [User!]!
+    directMessagesMembers: [User!]!
     channels: [Channel!]!
     admin: Boolean!
+  }
+  type Query {
+    teamMembers(teamId: Int!): [User!]!
   }
   type CreateTeamResponse {
     status: Boolean!
