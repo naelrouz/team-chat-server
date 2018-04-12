@@ -7,6 +7,7 @@ import requiresAuth from '../../../libs/permissions';
 const pubsub = new PubSub();
 
 const NEW_DIRECT_MESSAGE = 'NEW_DIRECT_MESSAGE';
+const NEW_DIRECT_MESSAGES_MEMBER = 'NEW_DIRECT_MESSAGES_MEMBER';
 
 export default {
   DirectMessage: {
@@ -50,6 +51,26 @@ export default {
       subscribe: withFilter(
         () => pubsub.asyncIterator(NEW_DIRECT_MESSAGE),
         (payload, args) => payload.receiverId === args.receiverId
+      )
+    },
+    newDirectMessagesMember: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator(NEW_DIRECT_MESSAGES_MEMBER),
+        (payload, args, { user }) => {
+          console.log('newDirectMessagesMember.payload: ', payload);
+          console.log('newDirectMessagesMember.args: ', args);
+          console.log('context.user: ', user);
+
+          const ifTheTeamWeNeed =
+            payload.newDirectMessagesMember.teamId === args.teamId;
+          const ifIHaveBeenAdded =
+            payload.newDirectMessagesMember.id === user.id;
+          const ifIAdded =
+            payload.newDirectMessagesMember.userIdWhoAdded === user.id;
+
+          //   return true;
+          return ifTheTeamWeNeed && (ifIAdded || ifIHaveBeenAdded);
+        }
       )
     }
   },
@@ -110,16 +131,16 @@ export default {
       async (parent, { email, teamId }, { models, ctx: { user } }) => {
         try {
           // is member of team?
-          const member = await models.Member.findOne(
+          const teamMember = await models.Member.findOne(
             { where: { teamId, userId: user.id } },
             { raw: true }
           );
 
           // console.log('addTeamMember.user.id: ', id);
-          console.log('member: ', member);
+          //   console.log('member: ', teamMember);
           // console.log('team.owner !== id: ', team.owner !== id);
 
-          if (!member) {
+          if (!teamMember) {
             return {
               status: false,
               errors: [
@@ -131,14 +152,14 @@ export default {
             };
           }
 
-          const userToAdd = await models.User.findOne(
+          const userToAdded = await models.User.findOne(
             { where: { email } },
             { raw: true }
           );
 
-          console.log('userToAdd:', !userToAdd);
+          console.log('userToAdded:', !userToAdded);
 
-          if (!userToAdd) {
+          if (!userToAdded) {
             return {
               status: false,
               errors: [
@@ -151,26 +172,32 @@ export default {
           }
 
           console.log('teamId: ', teamId);
-          console.log('userId: ', userToAdd.id);
+          console.log('userId: ', userToAdded.id);
 
-          //   const firstDirectMessageText =
-          //     user.id === userToAdd.id
-          //       ? `<b>This is your space ${
-          //           user.username
-          //         }.</b> You can talk to yourself here, but please bear in mind you’ll have to supply both sides of the conversation.`
-          //       : `${user.username} added you to the direct message list.`;
-
-          const directMessagesMember = await models.DirectMessage.create({
+          const firstDirectMessage = await models.DirectMessage.create({
             senderId: user.id,
-            receiverId: userToAdd.id,
+            receiverId: userToAdded.id,
             teamId,
             text: `${user.username} added you to the direct message list.`
           });
 
-          console.log('directMessagesMember: ', directMessagesMember);
+          //   console.log('firstDirectMessage: ', firstDirectMessage);
+
+          const pubsubAsync = async () => {
+            pubsub.publish(NEW_DIRECT_MESSAGES_MEMBER, {
+              newDirectMessagesMember: {
+                teamId,
+                userIdWhoAdded: user.id,
+                ...userToAdded.dataValues
+              }
+            });
+          };
+
+          pubsubAsync();
 
           return {
-            status: true
+            status: true,
+            member: userToAdded
           };
         } catch (err) {
           console.log('addTeamMember.err:', err);

@@ -12,7 +12,8 @@ type Query {
 }
 type Subscription {
     newDirectMessage(receiverId: Int!, teamId: Int!): Message!
-  }
+    newDirectMessagesMember(teamId: Int!): User!    
+}
 type CreateDirectMessageResponse {
     status: Boolean!
     message: Message
@@ -20,7 +21,7 @@ type CreateDirectMessageResponse {
 }
 type AddDirectMessagesMemberResponse {
     status: Boolean!
-    message: Message
+    member: User
     errors: [Error!]
 }
 type Mutation {
