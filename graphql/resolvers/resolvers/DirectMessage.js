@@ -22,19 +22,37 @@ export default {
     directMessages: requiresAuth.createResolver(
       async (parent, { receiverId, teamId }, { models, ctx: { user } }) => {
         const { Op } = models.Sequelize;
+        // const directMessages = await models.DirectMessage.findAll(
+        //   {
+        //     ordef: [['createdAt', 'ASC']],
+        //     where: {
+        //       teamId,
+        //       receiverId: {
+        //         [Op.or]: [receiverId, user.id]
+        //       },
+        //       senderId: {
+        //         [Op.or]: [user.id, receiverId]
+        //       }
+        //       //   [Op.and]: [{ receiverId }, { teamId }, { senderId: user.id }],
+        //       //   [Op.or]: []
+        //     }
+        //   },
+        //   { raw: true }
+        // );
+
         const directMessages = await models.DirectMessage.findAll(
           {
-            ordef: [['createdAt', 'ASC']],
+            order: [['created_at', 'ASC']],
             where: {
               teamId,
-              receiverId: {
-                [Op.or]: [receiverId, user.id]
-              },
-              senderId: {
-                [Op.or]: [user.id, receiverId]
-              }
-              //   [Op.and]: [{ receiverId }, { teamId }, { senderId: user.id }],
-              //   [Op.or]: []
+              [Op.or]: [
+                {
+                  [Op.and]: [{ receiverId }, { senderId: user.id }]
+                },
+                {
+                  [Op.and]: [{ receiverId: user.id }, { senderId: receiverId }]
+                }
+              ]
             }
           },
           { raw: true }
