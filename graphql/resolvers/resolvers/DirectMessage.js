@@ -50,16 +50,32 @@ export default {
     newDirectMessage: {
       subscribe: withFilter(
         () => pubsub.asyncIterator(NEW_DIRECT_MESSAGE),
-        (payload, args) => payload.receiverId === args.receiverId
+        (payload, args, { user }) => {
+          console.log('NEW_DIRECT_MESSAGE');
+
+          const ifTheTeamWeNeed =
+            payload.newDirectMessage.teamId === args.teamId;
+          const ifUserIsReceiver =
+            payload.newDirectMessage.receiverId === user.id;
+          const ifUserIsSender = payload.newDirectMessage.senderId === user.id;
+
+          // console.log(
+          //   'ifTheTeamWeNeed && (ifUserIsReceiver || ifUserIsSender) : ',
+          //   ifTheTeamWeNeed && (ifUserIsReceiver || ifUserIsSender)
+          // );
+
+          return ifTheTeamWeNeed && (ifUserIsReceiver || ifUserIsSender);
+          // return true;
+        }
       )
     },
     newDirectMessagesMember: {
       subscribe: withFilter(
         () => pubsub.asyncIterator(NEW_DIRECT_MESSAGES_MEMBER),
         (payload, args, { user }) => {
-          console.log('newDirectMessagesMember.payload: ', payload);
-          console.log('newDirectMessagesMember.args: ', args);
-          console.log('context.user: ', user);
+          // console.log('newDirectMessagesMember.payload: ', payload);
+          // console.log('newDirectMessagesMember.args: ', args);
+          // console.log('context.user: ', user);
 
           const ifTheTeamWeNeed =
             payload.newDirectMessagesMember.teamId === args.teamId;
@@ -91,24 +107,21 @@ export default {
           });
 
           const pubsubAsync = async () => {
-            const { dataValues } = await models.User.findOne(
+            const sender = await models.User.findOne(
               { where: { id: user.id } },
               { raw: true }
             );
 
             const newDirectMessage = {
               ...message.dataValues,
-              user: dataValues
+              user: sender.dataValues,
+              receiverId: args.receiverId
             };
 
-            console.log(
-              '>>>>>>>>>> newChannelMessage:::::::::::::::::::',
-              newDirectMessage
-            );
+            console.log('newDirectMessage: ', newDirectMessage);
 
             pubsub.publish(NEW_DIRECT_MESSAGE, {
-              receiverId: args.receiverId,
-              newChannelMessage
+              newDirectMessage
             });
           };
 

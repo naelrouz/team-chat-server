@@ -98,7 +98,8 @@ const appStart = async () => {
         subscribe,
         schema,
         onConnect: async (connectionParams, webSocket) => {
-          // console.log('connectionParams: ', connectionParams);
+          // return { user: { id: 1 } };
+          console.log('connectionParams: ', connectionParams);
           const { token, refreshToken } = connectionParams;
 
           if (token && refreshToken) {

@@ -1,6 +1,7 @@
 export default (sequelize, DataTypes) => {
   const DirectMessage = sequelize.define('direct_message', {
-    text: DataTypes.STRING
+    text: DataTypes.STRING,
+    createdAt: { type: DataTypes.DATE, field: 'created_at' }
   });
 
   DirectMessage.associate = models => {

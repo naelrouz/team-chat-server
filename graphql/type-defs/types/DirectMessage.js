@@ -5,13 +5,14 @@ type DirectMessage {
   user: User!
   senderId: Int!
   receiverId: Int!
+  teamId: Int!
   createdAt: String!
 }
 type Query {
   directMessages(teamId: Int!, receiverId: Int!): [DirectMessage!]!
 }
 type Subscription {
-    newDirectMessage(receiverId: Int!, teamId: Int!): Message!
+    newDirectMessage(receiverId: Int!, teamId: Int!): DirectMessage!
     newDirectMessagesMember(teamId: Int!): User!    
 }
 type CreateDirectMessageResponse {
