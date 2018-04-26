@@ -40,6 +40,7 @@ export default {
     addTeamMember: requiresAuth.createResolver(
       async (parent, { email, teamId }, { models, ctx: { user } }) => {
         try {
+          //  Permission to adding ?
           const { admin } = await models.Member.findOne(
             { where: { teamId, userId: user.id } },
             { raw: true }
@@ -60,15 +61,15 @@ export default {
               ]
             };
           }
-
-          const userToAdd = await models.User.findOne(
+          // User is isset ?
+          const addedUser = await models.User.findOne(
             { where: { email } },
             { raw: true }
           );
 
-          console.log('userToAdd:', !userToAdd);
+          console.log('userToAdd:', !addedUser);
 
-          if (!userToAdd) {
+          if (!addedUser) {
             return {
               status: false,
               errors: [
@@ -80,11 +81,30 @@ export default {
             };
           }
 
+          // Added user is already a member of this group ?
+
+          const teamMember = await models.Member.findOne(
+            { where: { teamId, userId: addedUser.id } },
+            { raw: true }
+          );
+
+          if (teamMember) {
+            return {
+              status: false,
+              errors: [
+                {
+                  path: 'email',
+                  message: 'User is already a member of this group'
+                }
+              ]
+            };
+          }
+
           console.log('teamId: ', teamId);
-          console.log('userId: ', userToAdd.id);
+          console.log('userId: ', addedUser.id);
 
           const member = await models.Member.create({
-            userId: userToAdd.id,
+            userId: addedUser.id,
             teamId,
             admin: false
           });
