@@ -35,7 +35,9 @@ export const refreshTokens = async (
 ) => {
   let userId = 0;
   try {
-    const { user: { id } } = jwt.decode(refreshToken);
+    const {
+      user: { id }
+    } = jwt.decode(refreshToken);
     userId = id;
   } catch (err) {
     return {};

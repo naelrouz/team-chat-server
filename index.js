@@ -32,13 +32,13 @@ const PORT = 3000;
 
 const { SECRET, SECRET2 } = cfg;
 
-console.log('SECRET: ', SECRET);
+// console.log('SECRET: ', SECRET);
+
+addUserInContext.init(app);
 
 Object.keys(middlewares).forEach(middleware => {
   middlewares[middleware].init(app);
 });
-
-addUserInContext.init(app);
 
 const endpointURL = '/graphql';
 const graphiqlURL = '/graphiql';

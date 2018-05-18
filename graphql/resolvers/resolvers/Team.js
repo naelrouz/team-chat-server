@@ -139,23 +139,36 @@ export default {
           // });
 
           // Transaction
-          const response = await models.sequelize.transaction(async () => {
-            const team = await models.Team.create({ ...args }); // owner: id
-            await models.Channel.create({
-              name: `General of ${team.name}`,
-              public: true,
-              teamId: team.id
-            });
-            const { admin } = await models.Member.create({
-              admin: true,
-              userId: user.id,
-              teamId: team.id
-            });
+          const response = await models.sequelize.transaction(
+            async transaction => {
+              const team = await models.Team.create(
+                { ...args },
+                { transaction }
+              ); // owner: id
+              //
+              await models.Channel.create(
+                {
+                  name: `General of ${team.name}`,
+                  public: true,
+                  teamId: team.id
+                },
+                { transaction }
+              );
+              //
+              const { admin } = await models.Member.create(
+                {
+                  admin: true,
+                  userId: user.id,
+                  teamId: team.id
+                },
+                { transaction }
+              );
 
-            // console.log('createTeam.transaction.team: ', team);
+              // console.log('createTeam.transaction.team: ', team);
 
-            return { ...team.dataValues, admin };
-          });
+              return { ...team.dataValues, admin };
+            }
+          );
 
           return {
             status: true,
